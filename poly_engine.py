@@ -1,5 +1,7 @@
 from cmath import sqrt
 import numpy as np
+from scipy.special import binom
+import matplotlib.pyplot as plt
 
 
 class Polynomial:
@@ -9,22 +11,42 @@ class Polynomial:
         self.degree = len(self.coefficients) - 1
 
     def __str__(self):
-        printable_list = [f'{self.coefficients[0]}'] if self.coefficients[0] != 0 else []
+        printable_list = []
+        self.coefficients = list(map(lambda r: round(r, 2), self.coefficients))
+
         for i, c in enumerate(self.coefficients):
-            if i == 1 and c != 0:
-                if c != 1:
-                    printable_list.append(f'{c}x + ')
+
+            if c == 0:
+                continue
+
+            sign = np.sign(c)
+            c = abs(c)
+            if sign == -1:
+                sign = ' - '
+            else:
+                sign = ' + '
+
+            if i == 0:
+                printable_list.append(f'{sign}{c}')
+
+            elif i == 1:
+                if c not in (1, -1):
+                    printable_list.append(f'{sign}{c}x')
                 else:
-                    printable_list.append(f'x + ')
-            if i > 1 and c != 0:
-                if c != 1:
-                    printable_list.append(f'{c}x^{i} + ')
+                    printable_list.append(f'{sign}x')
+
+            elif i > 1:
+                if c not in (1, -1):
+                    printable_list.append(f'{sign}{c}x^{i}')
                 else:
-                    printable_list.append(f'x^{i} + ')
+                    printable_list.append(f'{sign}x^{i}')
+        if sign.strip() == '+':
+            printable_list[-1] = printable_list[-1][3:]
+        else:
+            printable_list[-1] = printable_list[-1][1] + printable_list[-1][3:]
 
         result = f'{self.name}(x) = ' + ''.join(printable_list[::-1])
-        if self.coefficients[0] == 0:
-            result = result[:-3]
+
         return result
 
     def __len__(self):
@@ -57,7 +79,8 @@ class Polynomial:
         return self + other
 
     def __mul__(self, other):
-        pass
+        result = np.polymul(self.coefficients[::-1], other.coefficients[::-1])
+        return Polynomial(*result[::-1], name='h')
 
     def __floordiv__(self, other):
         if self.degree < other.degree:
@@ -66,12 +89,30 @@ class Polynomial:
         result, _ = np.polynomial.polynomial.polydiv(self.coefficients, other.coefficients)
         return Polynomial(*result, name='q')
 
+    def negating_shift(self, alpha):
+        """Returns p(alpha - x) as an expanded polynomial object"""
+        result = Polynomial(0)
+        for n, c in enumerate(self.coefficients):
+            if n == 0:
+                result += Polynomial(c)
+            else:
+                coefficients = []
+                for k in range(n + 1):
+                    coeff = c * (-1)**k * alpha**(n - k) * binom(n, k)
+                    coefficients.append(coeff)
+                result += Polynomial(*coefficients)
+        return result
+
     @property
     def prime(self):
         new_coefficients = []
         for i, coeff in enumerate(self.coefficients[1:]):
             new_coefficients.append((i+1)*coeff)
         return Polynomial(*new_coefficients, name=self.name + "'")
+
+    @property
+    def local_extrema(self):
+        return self.prime.zeros
 
     def diff(self, n=1):
         if n < 0 or type(n) != int:
@@ -84,6 +125,8 @@ class Polynomial:
             result = self
             for _ in range(n):
                 result = result.prime
+            if n == 2:
+                return Polynomial(*result.coefficients, name=self.name + "''")
         return Polynomial(*result.coefficients, name=self.name + f'^({n})')
 
     def __call__(self, number):
@@ -95,4 +138,21 @@ class Polynomial:
     @property
     def zeros(self):
         return list(np.roots(self.coefficients[::-1]))
+
+    def display_graph(self, size=(-100, 100)):
+
+        x = np.arange(size[0], size[1], 0.1)
+        y = np.array([self(t) for t in x])
+        plt.grid()
+        plt.title(f'{self.__str__()}')
+        plt.plot(x, y)
+        plt.show()
+
+    def display_zeros(self):
+        x_points = [zero.real for zero in self.zeros]
+        y_points = [zero.imag for zero in self.zeros]
+        plt.scatter(x_points, y_points)
+        plt.grid()
+        plt.title(f'Zeros of {self.__str__()}')
+        plt.show()
 
