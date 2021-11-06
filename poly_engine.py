@@ -82,6 +82,11 @@ class Polynomial:
         result = np.polymul(self.coefficients[::-1], other.coefficients[::-1])
         return Polynomial(*result[::-1], name='h')
 
+    def __truediv__(self, number):
+        assert type(number) == int or type(number) == float
+        coefficients = list(map(lambda x: x/number, self.coefficients))
+        return Polynomial(*coefficients)
+
     def __floordiv__(self, other):
         if self.degree < other.degree:
             raise ValueError('The degree of the numerator should be at least as great '
@@ -102,6 +107,10 @@ class Polynomial:
                     coefficients.append(coeff)
                 result += Polynomial(*coefficients)
         return result
+
+    def make_reflecsive(self, alpha):
+        """For any polynomial f, this method returns (f(x) + f(alpha - x)) / 2"""
+        return (self + self.negating_shift(alpha)) / 2
 
     @property
     def prime(self):
@@ -140,7 +149,6 @@ class Polynomial:
         return list(np.roots(self.coefficients[::-1]))
 
     def display_graph(self, size=(-100, 100)):
-
         x = np.arange(size[0], size[1], 0.1)
         y = np.array([self(t) for t in x])
         plt.grid()
