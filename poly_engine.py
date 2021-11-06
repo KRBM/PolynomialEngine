@@ -12,9 +12,9 @@ class Polynomial:
 
     def __str__(self):
         printable_list = []
-        self.coefficients = list(map(lambda r: round(r, 2), self.coefficients))
+        coefficients = list(map(lambda r: round(r, 2), self.coefficients))
 
-        for i, c in enumerate(self.coefficients):
+        for i, c in enumerate(coefficients):
 
             if c == 0:
                 continue
@@ -75,8 +75,8 @@ class Polynomial:
         return new_poly
 
     def __sub__(self, other):
-        other.coefficients = [-coeff for coeff in other.coefficients]
-        return self + other
+        coefficients = [-coeff for coeff in other.coefficients]
+        return self + Polynomial(*coefficients)
 
     def __mul__(self, other):
         result = np.polymul(self.coefficients[::-1], other.coefficients[::-1])
