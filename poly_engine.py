@@ -59,9 +59,7 @@ class Polynomial:
             return self.coefficients[n]
 
     def __eq__(self, other):
-        if self.coefficients == other.coefficients:
-            return True
-        return False
+        return self.coefficients == other.coefficients
 
     def __add__(self, other):
         g, l = sorted((self, other), key=lambda x: len(x.coefficients), reverse=True)
