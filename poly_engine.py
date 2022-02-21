@@ -1,7 +1,10 @@
 from cmath import sqrt
+from matplotlib.colors import Colormap
 import numpy as np
 from scipy.special import binom
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+plt.style.use('dark_background')
 
 
 class Polynomial:
@@ -106,7 +109,7 @@ class Polynomial:
                 result += Polynomial(*coefficients)
         return result
 
-    def make_reflecsive(self, alpha):
+    def make_reflexsive(self, alpha):
         """For any polynomial f, this method returns (f(x) + f(alpha - x)) / 2"""
         return (self + self.negating_shift(alpha)) / 2
 
@@ -146,19 +149,62 @@ class Polynomial:
     def zeros(self):
         return list(np.roots(self.coefficients[::-1]))
 
-    def display_graph(self, size=(-100, 100)):
+    def display_graph(self, size=(-100, 100), reflection=None):
         x = np.arange(size[0], size[1], 0.1)
         y = np.array([self(t) for t in x])
         plt.grid()
         plt.title(f'{self.__str__()}')
         plt.plot(x, y)
+        if reflection is not None:
+            plt.axvline(x=reflection, color='r', linestyle='-')
         plt.show()
 
-    def display_zeros(self):
+    def display_zeros(self, reflection=None):
         x_points = [zero.real for zero in self.zeros]
         y_points = [zero.imag for zero in self.zeros]
         plt.scatter(x_points, y_points)
+        if reflection is not None:
+            plt.axvline(x=reflection, color='r', linestyle='-')
         plt.grid()
         plt.title(f'Zeros of {self.__str__()}')
         plt.show()
 
+
+    def animate_zeros(self):
+
+        fig = plt.figure() 
+        ax = plt.axes(xlim=(-50, 50), ylim=(-50, 50)) 
+        line, = ax.plot(0,1, 'bo')
+
+        # initialization function 
+        def init(): 
+            # creating an empty plot/frame 
+            line.set_data([], []) 
+            return line,
+
+        # animation function 
+        def animate(i):
+            alpha = i - 200
+            # t is a parameter 
+            dummy = self.make_reflexsive(alpha)
+            x_points = [zero.real for zero in dummy.zeros]
+            y_points = [zero.imag for zero in dummy.zeros]
+            
+            xdata, ydata = [], []
+            xdata.append(x_points)
+            ydata.append(y_points) 
+            line.set_data(xdata, ydata) 
+            return line,
+            
+        # setting a title for the plot 
+        plt.title('Animating zeros of reflexive function') 
+        # hiding the axis details 
+        plt.axis('off') 
+
+        # call the animator	 
+        anim = FuncAnimation(fig, animate, init_func=init, 
+                                    frames=500, interval=10, blit=True)
+        
+
+        # save the animation as mp4 video file 
+        anim.save('zeros.gif') 
