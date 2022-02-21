@@ -170,10 +170,10 @@ class Polynomial:
         plt.show()
 
 
-    def animate_zeros(self):
+    def animate_zeros(self, size=50):
 
         fig = plt.figure() 
-        ax = plt.axes(xlim=(-50, 50), ylim=(-50, 50)) 
+        ax = plt.axes(xlim=(-size, size), ylim=(-size, size)) 
         line, = ax.plot(0,1, 'bo')
 
         # initialization function 
